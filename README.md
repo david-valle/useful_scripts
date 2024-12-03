@@ -1,11 +1,15 @@
 # Useful scripts
 Useful scripts (mainly) for bioinformatics.
 
-### Description
+---
 
-These are some scripts that I have written over the years that I find particularly useful.
+## Description
+
+These are some scripts that I have written over the years that I find particularly useful. I have used them in several bioinformatic projects.
 
 I hope you find them useful too! 
+
+They run through the terminal in an UNIX based system (Linux, Mac, etc.), so some (very) basic command line knowledge may be required to use them.
 
 If you have questions, problems or suggestions, contact David Valle-Garcia (david dot valle dot edu -at- gmail dot com)
 
@@ -26,7 +30,7 @@ If you have questions, problems or suggestions, contact David Valle-Garcia (davi
 
 ## Installation
 
-Download scripts from Github repository:  
+Download scripts from Github repository. Type in a terminal: 
 ```
 git clone https://github.com/david-valle/useful_scripts
 ```
@@ -49,7 +53,7 @@ elif [ -f ~/.zshrc ]; then
     echo "export PATH=$PATH:$FOLDER/bin" >> ~/.zshrc
 fi
 ```
-Then restart your terminal and you will be able to call any of the scripts. To test type:
+Then restart your terminal and you will be able to call any of the scripts by name. To test it, type:
 ```
 BedFlank.pl
 ```
@@ -79,4 +83,5 @@ In the (I hope not so distant) future, I will provide here a detailed explanatio
 ### A few final words
 
 I know that all the things that the scripts do can be done in several ways. With R, python, awk or even excel. However, in my day-to-day work I find them very convenient and easy to use.
+
 They are written in perl for the only reason that that's the language I learned when I learn how to code (yes, you can tell I'm not a spring chicken). I'm sure they can be written in python or R, but I just don't have time to. If you would like to, please be my guest!
