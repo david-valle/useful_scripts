@@ -28,7 +28,7 @@ If you have questions, problems or suggestions, contact David Valle-Garcia (davi
 
 Download scripts from Github repository:  
 ```
-git https://github.com/david-valle/useful_scripts
+git clone https://github.com/david-valle/useful_scripts
 ```
 Go to the folder you just downloaded:
 ```
