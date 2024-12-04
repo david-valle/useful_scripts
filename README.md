@@ -21,8 +21,8 @@ If you have questions, problems or suggestions, contact David Valle-Garcia (davi
 * Perl 5.8+
 
 #### Compatible OS*:
-* Ubuntu 20.04.5 LTS
-* MacOS 14.3
+* Ubuntu 24.04.1 LTS
+* MacOS 14.6
 
 \* The scripts should run in any UNIX based OS and versions, but testing is required.
 
