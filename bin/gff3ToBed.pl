@@ -37,7 +37,7 @@ use Getopt::Long;
 ##############################
 
 my $program_name = "gff3ToBed.pl";
-my $version = 0.2;
+my $version = 1.0;
 my $version_date = "Nov 2024";
 my $help = 0;
 my $infile = undef;
@@ -46,7 +46,9 @@ my %record = ();
 my $type = 0;
 my $column4 = "gene_id";
 my $column5 = "gene_name";
-my $column7 = "gene_type";
+#my $add_features = "";
+my @add_features = ();
+my $missing_value = "NA";
 my $gtf = 0;
 my $print_version = 0;
 
@@ -63,7 +65,8 @@ GetOptions (
 	'type|t=s'=>\$type,
 	'column4|c4=s'=>\$column4,
 	'column5|c5=s'=>\$column5,
-	'column7|c7=s'=>\$column7,
+	'add-features|af=s'=>\@add_features,
+	'missing-value|mv=s'=>\$missing_value,
 	'gtf'=>\$gtf,
 	'version|v'=>\$print_version,
 ) or die "\nType: '$program_name --help' for details.\n\n";
@@ -92,6 +95,12 @@ if ($outfile) { # If there is an output file selected
 ###############################
 ## Open and parse GFF3 file
 ##############################
+
+# if additional features are added:
+
+#if($add_features){
+#  @added_features = split/\,/,$add_features;
+#}
 
 open(IN, "$infile") || die "\nError: Gff3 file $infile can't be opened. Exiting\n\n";
 
@@ -124,8 +133,26 @@ while(<IN>){
 		}
 		$record{$pair_split[0]} = $pair_split[1]; # Save to hash
 	}
-	## print the line
-	print "$record{'chr'}\t$record{'start'}\t$record{'end'}\t$record{$column4}\t$record{$column5}\t$record{'strand'}\t$record{$column7}\n";
+	
+	## If column 4 and column 5 are not present in hash, make them equal to missing value
+	if (!exists $record{$column4}) { $record{$column4} = $missing_value; }
+	if (!exists $record{$column5}) { $record{$column5} = $missing_value; }
+	
+	## print line
+	print "$record{'chr'}\t$record{'start'}\t$record{'end'}\t$record{$column4}\t$record{$column5}\t$record{'strand'}";
+	
+	## print @added_features
+#	if ($add_features){
+	  foreach my $value (@add_features){
+	    # If value is not in hash, make it equal to missing value
+	    if (!exists $record{$value}) { $record{$value} = $missing_value; }
+	    # Print value
+	    print "\t$record{$value}";
+	  }
+#	}
+	
+	## print final end of line
+	print "\n";
 }
 close(IN);
 exit(0);
@@ -149,7 +176,8 @@ sub printhelp {
    print "-t | --type\t\tOnly print lines matching this feature type (in GFFs 3rd column)\n";
    print "-c4 | --column4\t\tName of the feature you want to print in the 4th column. Default: gene_id\n";
    print "-c5 | --column5\t\tName of the feature you want to print in the 5th column. Default: gene_name\n";
-   print "-c7 | --column7\t\tName of the feature you want to print in the 7th column. Default: gene_type\n";
+   print "-af | --add-features\tAdd a column with the indicated feature. It can be used multiple times. E.g. '-af gene_type -af transcript_type' will add gene_type and transcript_type to the 7th and 8th columns, respectively. Default: none\n";
+   print "-mv | --missing_value\tIf the value from a particular feature is missing, what should be printed. Default: NA\n";
    print "--gtf\t\t\tInput file is in GTF format instead of GFF3 (it expects GFF3 by default)\n";
    print "-h | --help\t\tPrint help\n";
    print "-v | --version\t\tProgram version\n\n";
