@@ -37,7 +37,7 @@ use Getopt::Long;
 ##############################
 
 my $program_name = "gff3ToBed.pl";
-my $version = 1.0;
+my $version = 1.1;
 my $version_date = "Nov 2024";
 my $help = 0;
 my $infile = undef;
@@ -116,8 +116,8 @@ while(<IN>){
 	$record{'chr'} = $line[0];
 	$record{'source'} = $line[1];
 	$record{'type'} = $line[2];
-	$record{'start'} = $line[3];
-	$record{'end'} = $line[4];
+	$record{'start'} = --$line[3];
+	$record{'end'} = --$line[4];
 	$record{'score'} = $line[5];
 	$record{'strand'} = $line[6];
 	$record{'phase'} = $line[7];
