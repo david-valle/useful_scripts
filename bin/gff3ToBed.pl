@@ -38,7 +38,7 @@ use Getopt::Long;
 
 my $program_name = "gff3ToBed.pl";
 my $version = 1.1;
-my $version_date = "Nov 2024";
+my $version_date = "Dec 2024";
 my $help = 0;
 my $infile = undef;
 my $outfile = "";
@@ -96,11 +96,6 @@ if ($outfile) { # If there is an output file selected
 ## Open and parse GFF3 file
 ##############################
 
-# if additional features are added:
-
-#if($add_features){
-#  @added_features = split/\,/,$add_features;
-#}
 
 open(IN, "$infile") || die "\nError: Gff3 file $infile can't be opened. Exiting\n\n";
 
@@ -116,8 +111,8 @@ while(<IN>){
 	$record{'chr'} = $line[0];
 	$record{'source'} = $line[1];
 	$record{'type'} = $line[2];
-	$record{'start'} = --$line[3];
-	$record{'end'} = --$line[4];
+	$record{'start'} = --$line[3]; # Because bed is zero-based, start is decreased
+	$record{'end'} = --$line[4]; # Because bed is zero-based, end is decreased
 	$record{'score'} = $line[5];
 	$record{'strand'} = $line[6];
 	$record{'phase'} = $line[7];
@@ -142,14 +137,12 @@ while(<IN>){
 	print "$record{'chr'}\t$record{'start'}\t$record{'end'}\t$record{$column4}\t$record{$column5}\t$record{'strand'}";
 	
 	## print @added_features
-#	if ($add_features){
-	  foreach my $value (@add_features){
+	foreach my $value (@add_features){
 	    # If value is not in hash, make it equal to missing value
 	    if (!exists $record{$value}) { $record{$value} = $missing_value; }
 	    # Print value
-	    print "\t$record{$value}";
-	  }
-#	}
+		print "\t$record{$value}";
+	}
 	
 	## print final end of line
 	print "\n";
