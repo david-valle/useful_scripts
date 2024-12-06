@@ -112,7 +112,7 @@ while(<IN>){
 	$record{'source'} = $line[1];
 	$record{'type'} = $line[2];
 	$record{'start'} = --$line[3]; # Because bed is zero-based, start is decreased
-	$record{'end'} = --$line[4]; # Because bed is zero-based, end is decreased
+	$record{'end'} = $line[4]; # Because bed is half-open, end is not changed
 	$record{'score'} = $line[5];
 	$record{'strand'} = $line[6];
 	$record{'phase'} = $line[7];
