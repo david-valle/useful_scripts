@@ -34,8 +34,8 @@ use Getopt::Long;
 ##############################
 
 my $program_name = "BedFlank.pl";
-my $version = "2.1";
-my $version_date = "Nov 2024";
+my $version = "3.0";
+my $version_date = "Dec 2024";
 my $help = 0;
 my $infile = undef;
 my $up = 0;
@@ -91,7 +91,7 @@ if ( !defined($infile)) { # If infile was not provided
 
 if ($three_prime || $five_prime || $middle) { # If 5 prime, 3 prime or middle point modes are selected
 	my $sum = $down + $up;
-	if ($sum <= 0){ die("\nFError: You are trying to subtract more bases than the ones you are adding. Try to inactivate the -5, -3 or -m options if you only want to modify the start, end or middle coordinates or adjust your --up and --down parameters.\n\n"); }
+	if ($sum < 0){ die("\nError: You are trying to subtract more bases than the ones you are adding to a specific point. Disable -5, -3 or -m options or adjust your -up and -down parameters.\n\n"); }
 }
 
 if ($three_prime && $five_prime) { # If 5 prime and 3 prime modes are on at the same time
@@ -135,40 +135,42 @@ while (<BED>){
 	chomp(); # Delete the line end
 	@line = split/\t/; # Split the line
 	# Save the start and end coordinates
-	if ( ($line[5] =~ /\-/) && !$no_strand) { # If this is the negative strand and there is not an ignore strand flag
+	my $start = $line[1]; 
+	my $end = $line[2];
+	if ( ($line[5] =~ /\+/) || $no_strand)  { # If this is a + strand or there's a ignore strand flag
 		if ($five_prime) { # If 5' mode is selected
-			$line[1] = $line[2]; # Make the 3' pos equal the 5'
+			$end=($start+1); # Change end to start+1 (because bed has open-ended positions)
 		} elsif ($three_prime) { # If 3' mode is selected
-			$line[2] = $line[1]; # Make the 5' pos equal the 3'
+			$start=($end-1); # Change start to end-1 (because bed is zero based)
 		} elsif ($middle) { # If middle point mode is selected
-			$mid_coordinate = (($line[2]-$line[1])/2); # Calculate half of the size
-			$mid_coordinate = $line[2]-$mid_coordinate; # Get the middle coordinate
-			$line[1] = int($mid_coordinate); # Make the 5' equal than the middle
-			$line[2] = int($mid_coordinate); # Make the 3' equal than the middle
+			$mid_coordinate = int(($end-$start)/2); # Calculate half of the size
+			$mid_coordinate = $start+$mid_coordinate; # Get the middle coordinate
+			$start=$mid_coordinate; # Make start equal than middle
+			$end=($mid_coordinate+1); # Make end middle + 1 (because bed is open-ended)
 		}
-		$line[1] -= $down; # Decrease the downstream in the start
-		$line[2] += $up; # Increase the upstream in the end
-	} else { # If this is a + strand or there's a ignore strand flag
+		$start -= $up; # Decrease upstream at start position
+		$end += $down; # Increase upstream at end position
+	} else { # If this is a negative strand 
 		if ($five_prime) { # If 5' mode is selected
-			$line[2] = $line[1]; # Make the 3' pos equal the 5'
+			$start=($end-1); # Change start to end-1 (because bed is zero based)
 		} elsif ($three_prime) { # If 3' mode is selected
-			$line[1] = $line[2]; # Make the 5' pos equal the 3'
+			$end=($start+1); # Change end to start+1 (because bed has open-ended positions)
 		} elsif ($middle) { # If middle point mode is selected
-			$mid_coordinate = (($line[2]-$line[1])/2); # Calculate half of the size
-			$mid_coordinate = $line[1]+$mid_coordinate; # Get the middle coordinate
-			$line[1] = int($mid_coordinate); # Make the 5' equal than the middle
-			$line[2] = int($mid_coordinate); # Make the 3' equal than the middle
+			$mid_coordinate = int(($end-$start)/2); # Calculate half of the size
+			$mid_coordinate = $start+$mid_coordinate; # Get middle coordinate
+			$start=$mid_coordinate; # Make start equal to middle
+			$end=($mid_coordinate+1); # Make end middle + 1 (because bed is open-ended)
 		}
-		$line[1] -= $up; # Decrease the upstream in the start
-		$line[2] += $down; # Increase the upstream in the end
+		$start -= $down; # Decrease downstream at start position
+		$end += $up; # Increase upstream at end position
 	}
+	
+	if ($start<0){ $start=0; } # If the start position ends up being less than 0, make it 0
 
-	if ($line[1]<0){ $line[1]=0; } # If the start position is less than 0, make it 0
-
-	if ($genome_file) { # If we have a genome file, check that last position is not greater than genome size. If it is, change it
+	if ($genome_file) { # If we have a genome file, check that end position is not greater than chr size. If it is, change it
 		if (defined $genome_hash{ $line[0] }) { # if the chromosome is recognized and has a valid value
-			if ( $line[2] > $genome_hash{ $line[0] } ) { # if the end is greater than the chromosome
-				$line[2] = $genome_hash{ $line[0] }; # change it
+			if ( $end > $genome_hash{ $line[0] } ) { # if the end is greater than the chromosome
+				$end = $genome_hash{ $line[0] }; # change it
 			}
 		} else { # If we don't have a recognized chromosome
 			if (!$silent){ # Print warning and give the hash a high value so the warning won't show again
@@ -178,14 +180,17 @@ while (<BED>){
 		}
 	}
 
-	if ($line[1] >= $line[2]) { # If after the calculation the start is bigger than the end
+	if ($start >= $end) { # If after the calculation start is bigger than end
 		if (!$silent){ # Print warning and skip
-			print STDERR "Warning: line: $line[0] $line[1] $line[1] is out of bounds with current settings, ignoring\n";
+			print STDERR "Warning: line: $line[0] $line[1] $line[2] is out of bounds with current settings. Calculated coordinates are:  $line[0] $start $end . Ignoring\n";
 		}
 		next;
+	} else { # If everything looks good, save start and end to line
+		$line[1] = $start;
+		$line[2] = $end;
 	}
 	
-	# Print the line
+	# Print the whole line
 	for (my $x = 0; $x<$#line; $x++){ print "$line[$x]\t";} print "$line[$#line]\n";
 }
 close (BED);
